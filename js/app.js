@@ -1,3 +1,60 @@
+var Score = function(){
+    this.score = 0;
+};
+
+Score.prototype.render = function(){
+    ctx.fillStyle = "white";
+    ctx.fillRect(200,10,200,35);
+    ctx.font = "34px Serif";
+    ctx.fillStyle = "black";
+    ctx.fillText("Score:"+this.score,200,35);
+};
+
+// all images of players
+var allPlayers = [
+'images/char-boy.png',
+'images/char-cat-girl.png',
+'images/char-horn-girl.png',
+'images/char-pink-girl.png',
+'images/char-princess-girl.png'];
+
+// when the player win the game. Call the funciton to make the game harder.
+// Create new player to change images;
+// higher level, more bugs.
+function harder(level){
+
+    if (level === -1) {
+        alert('You Lose! Try Again!');
+        player = new Player(0);
+        produceEnemies(4);
+        score.score = 0;
+        score.render();
+        console.log('produce,enemy');
+    } else if (level > 0 && level <= 4) {
+        score.score = score.score + level * 200;
+        score.render();
+        alert('Level'+level+" Completed! Keep Going!");
+        player = new Player(level);
+        produceEnemies(3+level*2);
+    } else if (level === 5) {
+        alert('You totally win! Score:'+score.score+'! Play again?');
+        player = new Player(0);
+        produceEnemies(4);
+        score.score = 0;
+        score.render();
+    }
+
+}
+
+function produceEnemies(num){
+    allEnemies =[];
+    for (var i = 0; i < num; i++) {
+        allEnemies[i] = new Enemy();
+        }
+}
+
+
+
 // Enemies our player must avoid
 var Enemy = function() {
     // Variables applied to each of our instances go here,
@@ -22,7 +79,13 @@ Enemy.prototype.update = function(dt,player) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
-    if (this.x > 700) {
+    if (this.x > 606 && player.y<320) {
+        this.x = this.x - 700 + this.speed * dt;
+        this.y = Math.floor(Math.random()*3+1) * 73;
+        score.score = score.score + 10 ;
+        score.render();
+        // console.log(player.y);
+    } else if(this.x > 606){
         this.x = this.x - 700 + this.speed * dt;
         this.y = Math.floor(Math.random()*3+1) * 73;
     } else{
@@ -33,14 +96,12 @@ Enemy.prototype.update = function(dt,player) {
         this.x + this.width > player.x &&
         this.y < player.y + player.height &&
         this.y + this.height > player.y){
-        console.log(this.x+","+this.y+";"+player.x+","+player.y);
-        alert('you lose!');
-        player.x = 101*2;
-        player.y = 82*5;
-        player.update();
-    }
+        //console.log(this.x+","+this.y+";"+player.x+","+player.y);
 
-this.render();
+        //reset the image，level and score
+        harder(-1);
+    }
+    this.render();
 };
 
 
@@ -52,8 +113,9 @@ Enemy.prototype.render = function() {
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
-var Player = function(){
-    this.sprite = 'images/char-horn-girl.png';
+var Player = function(level){
+    this.sprite = allPlayers[level];
+    this.level = level;
     this.width = 60;
     this.height = 50;
     this.x = 101*2;
@@ -74,6 +136,10 @@ Player.prototype.handleInput = function(keyCode){
     }
     if(keyCode === 'up' && this.y > 0){
         this.y = this.y - 83;
+        if (this.y < 0) {
+            this.render();
+            harder(this.level+1);
+        }
     }
     if(keyCode === 'right' && this.x < 404){
         this.x = this.x +101;
@@ -81,19 +147,17 @@ Player.prototype.handleInput = function(keyCode){
     if(keyCode === 'down' && this.y < 435){
         this.y = this.y + 83;
     }
-    if(this.y < 0){
-        alert('you win!');
-        this.x = 101 * 2;
-        this.y = 82 * 5;
-    }
 };
 
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [new Enemy(),new Enemy(),new Enemy(),new Enemy(),new Enemy()];
-var player = new Player();
+
+var allEnemies = [];
+produceEnemies(4);
+var player = new Player(0);
+var score = new Score();
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
